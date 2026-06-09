@@ -7,69 +7,41 @@
 - **call_delay_seconds**: 10
 - **optimization_level**: guarded
 - **external_api_calls_made**: 8
-- **baseline_total_input_tokens**: 12269
-- **baseline_total_output_tokens**: 1040
-- **baseline_total_tokens**: 13309
-- **optimized_total_input_tokens**: 8073
-- **optimized_total_output_tokens**: 934
-- **optimized_total_tokens**: 9007
-- **token_reduction_pct**: 32.32399128409347
-- **baseline_cost_usd**: 0.00806031
-- **optimized_cost_usd**: 0.00550093
-- **savings_usd**: 0.002559379999999999
-- **cost_reduction_pct**: 31.75287302845672
-- **quality**: {'decision_preserved': True, 'score_delta': 0.0, 'keyword_retention_pct': 96.15384615384616, 'entity_retention_pct': 96.15384615384616, 'concern_retention_pct': 66.66666666666667, 'reason_overlap_pct': 52.17391304347826, 'output_similarity': 0.5354330708661418, 'overall_retention_pct': 91.64715719063545, 'baseline_decision': 'shortlist', 'optimized_decision': 'shortlist', 'baseline_score': 7.0, 'optimized_score': 7.0, 'missing_entities': ['llm'], 'missing_concerns': ['limited deep mlops experience with kubernetes', 'weak evidence for online monitoring']}
+- **baseline_total_input_tokens**: 12908
+- **baseline_total_output_tokens**: 780
+- **baseline_total_tokens**: 13688
+- **input_token_reduction_pct**: 37.108769755190586
+- **optimized_total_input_tokens**: 8118
+- **optimized_total_output_tokens**: 785
+- **optimized_total_tokens**: 8903
+- **token_reduction_pct**: 34.95762711864406
+- **baseline_cost_usd**: 0.00823192
+- **optimized_cost_usd**: 0.0054097699999999995
+- **savings_usd**: 0.0028221500000000007
+- **cost_reduction_pct**: 34.28301052488363
+- **quality**: {'decision_preserved': True, 'score_delta': 0.20000000000000018, 'keyword_retention_pct': 100.0, 'entity_retention_pct': 100.0, 'concern_retention_pct': 100.0, 'raw_concern_retention_pct': 100.0, 'weighted_concern_retention_pct': 100.0, 'reason_overlap_pct': 100.0, 'output_similarity': 0.8666666666666667, 'overall_retention_pct': 100.0, 'baseline_decision': 'shortlist', 'optimized_decision': 'shortlist', 'baseline_score': 8.0, 'optimized_score': 7.8, 'missing_entities': [], 'missing_concerns': [], 'missing_concern_weights': {}, 'score_preserved': True, 'retention_pass': True, 'retention_formula': '0.30*decision + 0.15*score + 0.20*entity + 0.25*weighted_concern + 0.10*reason', 'concern_weight_formula': '100 * retained_concern_weight / baseline_concern_weight; critical=3.0, important=2.5, minor metadata=0.5, default=1.0'}
+- **baseline_outputs_normalized_or_repaired**: 4
+- **optimized_outputs_normalized_or_repaired**: 4
+- **baseline_repair_severity_counts**: {'none': 0, 'minor': 4, 'major': 0, 'fallback': 0}
+- **optimized_repair_severity_counts**: {'none': 0, 'minor': 4, 'major': 0, 'fallback': 0}
+- **baseline_invalid_json_outputs**: 0
+- **optimized_invalid_json_outputs**: 0
 
 ## Optimized Context Reductions
 
-- Resume Intelligence Agent: 55.37% (2850 -> 1272); guard=True; missing=[]
-- JD Matching Agent: -6.56% (1556 -> 1658); guard=True; missing=[]
-- Interview Intelligence Agent: 0.68% (1902 -> 1889); guard=True; missing=[]
-- Recruiter Decision Agent: 4.10% (2100 -> 2014); guard=True; missing=[]
+- Resume Intelligence Agent: 52.25% (2850 -> 1361); guard=True; missing=[]
+- JD Matching Agent: -22.20% (1225 -> 1497); guard=True; missing=[]
+- Interview Intelligence Agent: -21.29% (1348 -> 1635); guard=True; missing=[]
+- Recruiter Decision Agent: -18.09% (1504 -> 1776); guard=True; missing=[]
 
 ## Baseline Final Answer
 
 ```
-final_score: 7
-shortlist_decision: Shortlist
-evidence_terms: [python, fastapi, sql, rag, vector databases, milvus, docker, gcp, cloud run, mlops, ci/cd, api, nlq-sql, kubernetes]
-reasons: 
-* Strong experience with Python, FastAPI, SQL, and RAG
-* Proficient in vector databases, including Milvus
-* Experience with Docker, GCP, and Cloud Run
-* Demonstrated ability to build agentic AI systems and optimize LLM cost
-* Strong project ownership and cost awareness
-concerns: 
-* Limited deep MLOps experience with Kubernetes, feature stores, and model registry lifecycle
-* Needs stronger quality evaluation using human labels and task-specific acceptance metrics
-* Weak evidence for online monitoring, A/B testing, and model drift lifecycle
-* Risk of shallow MLOps and no real production monitoring
-interview_plan: 
-* How would you handle a situation where the model drifts significantly in production?
-* Can you explain your experience with Kubernetes and how you would deploy a model using it?
-* How would you implement real-time monitoring and A/B testing for a machine learning model?
-* Can you walk us through your approach to addressing the
+{"final_score":8.0,"shortlist_decision":"Shortlist","evidence_terms":["python","fastapi","sql","langchain","rag","vector databases","milvus","docker","gcp cloud run","api integration","ci/cd","cloud deployment","mlops","model registry","feature store","kubernetes","online monitoring","concept drift","model drift","human labels","acceptance metrics"],"reasons":["python fastapi sql skills","api integration experience","cloud run docker deployment","cost awareness and token optimization","honest gap identification","mlops governance awareness","rag vector database experience"],"concerns":["concept drift validation gap","limited deep mlops experience","limited feature store experience","limited model registry lifecycle","model drift validation gap","needs human labels","needs task-specific acceptance metrics","weak evidence for online monitoring"],"interview_plan":["Ask about production monitoring","Discuss model drift and concept drift","Evaluate token optimizer effectiveness","Explore MLOps gap and learning plan"],"schema_valid":true}
 ```
 
 ## Optimized Final Answer
 
 ```
-final_score: 7
-shortlist_decision: Shortlist
-evidence_terms: [python, fastapi, sql, rag, milvus, docker, gcp, cloud run, kubernetes, mlops, nlq-sql, agent, agentic, api, ci/cd, github]
-reasons: 
-* Applied AI engineering experience with Python, FastAPI, and SQL
-* Familiarity with cloud deployment, CI/CD, and Docker
-* Experience with vector databases (Milvus) and RAG
-* Strong project ownership and cost awareness
-concerns: 
-* Limited deep MLOps experience with Kubernetes and feature stores
-* No production Kubernetes ownership experience
-* Risk of shallow MLOps and no real production monitoring
-* Need for stronger quality evaluation using human labels and task-specific acceptance metrics
-interview_plan: 
-* How would you handle MLOps gap and learn model registry, CI/CD for models, drift monitoring, and feature stores?
-* How would you prove your token optimizer does not corrupt hiring decisions and preserve final decision and score deltas?
-* Can you explain your experience with cloud deployment and CI/CD pipelines?
-* How do you approach model evaluation and quality assessment in your work?
+{"final_score":7.8,"shortlist_decision":"Shortlist","evidence_terms":["python","fastapi","sql","langchain","rag","milvus","docker","gcp","cloud run","api integration","ci/cd","cost awareness","mlops","model drift","concept drift","online monitoring","kubernetes","feature store","model registry"],"reasons":["python fastapi sql skills","cloud run docker deployment","cost awareness and token optimization","honest gap identification","mlops governance awareness","rag vector database experience"],"concerns":["concept drift validation gap","limited deep mlops experience","limited feature store experience","limited model registry lifecycle","model drift validation gap","needs human labels","needs task-specific acceptance metrics","weak evidence for online monitoring"],"interview_plan":["Ask about production monitoring","Discuss model drift and concept drift","Inquire about MLOps experience","Explore cost optimization strategies"],"schema_valid":true}
 ```

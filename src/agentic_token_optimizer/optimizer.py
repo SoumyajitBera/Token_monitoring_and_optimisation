@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from .token_utils import approx_tokens, normalize_ws, simple_sentences, lexical_similarity, extract_keywords, top_terms
+from .evidence import build_evidence_ledger, protected_terms_from_ledger, PROTECTED_GOVERNANCE_TERMS
 
 # Domain entities that must survive compression in ProdSync hiring workflows.
 DOMAIN_TERMS = {
@@ -58,10 +59,34 @@ class EvidenceGuardedOptimizer:
         else:
             self.min_keep_ratio = 0.34
 
+
+    def _strip_previous_contract(self, text: str) -> str:
+        """Avoid recursive prompt/header bloat when optimized inter-agent state is optimized again."""
+        lines = text.splitlines()
+        kept: list[str] = []
+        skip_prefixes = (
+            "COMPRESSED_CONTEXT_CONTRACT:",
+            "- Preserve all mandatory evidence",
+            "- Concerns/risk evidence",
+            "- Do not infer missing experience",
+            "MANDATORY_EVIDENCE_TERMS:",
+            "TASK_TERMS:",
+            "PRESERVED_EVIDENCE:",
+            "MANDATORY_RETAINED_TERMS:",
+        )
+        for line in lines:
+            if line.strip().startswith(skip_prefixes):
+                continue
+            kept.append(line)
+        return "\n".join(kept) if kept else text
+
     def optimize(self, text: str, task: str = "", target_tokens: int | None = None) -> OptimizationResult:
-        original = normalize_ws(text)
+        original = normalize_ws(self._strip_previous_contract(text))
         original_tokens = approx_tokens(original)
         protected_terms = self.extract_protected_terms(original + "\n" + task)
+        ledger = build_evidence_ledger(original + "\n" + task)
+        # Hard-protect exact entities, reasons, and especially negative evidence.
+        protected_terms = list(dict.fromkeys(protected_terms_from_ledger(ledger, limit=80) + protected_terms + PROTECTED_GOVERNANCE_TERMS))[:80]
 
         if original_tokens <= 550:
             cleaned = self._light_cleanup(original)
@@ -134,7 +159,7 @@ class EvidenceGuardedOptimizer:
         for phrase in [
             "limited mlops", "lack of", "no production", "human labels", "task-specific",
             "acceptance metrics", "cloud run", "model registry", "feature store", "model drift",
-            "concept drift", "production monitoring", "kubernetes ownership", "shallow mlops"
+            "concept drift", "production monitoring", "kubernetes ownership", "shallow mlops", "synthetic benchmark data", "synthetic data", "real-world validation logs"
         ]:
             if phrase in lower:
                 found.add(phrase)
@@ -197,9 +222,9 @@ class EvidenceGuardedOptimizer:
 
     def _is_critical(self, chunk: str, protected_terms: list[str]) -> bool:
         lower = chunk.lower()
-        if self._has_negation(lower):
-            return True
-        if re.search(r"\b(score|decision|shortlist|concern|risk|weakness|gap|required|must|do not|cannot|missing)\b", lower):
+        # Do not keep every negated sentence; that destroys compression.
+        # Keep explicit hiring risk/constraint evidence. General do-not rules are preserved in the contract header.
+        if re.search(r"\b(score|decision|shortlist|concern|risk|weakness|gap|missing|limited|lack|shallow|monitoring|human labels|acceptance metrics|model registry|feature store|kubernetes)\b", lower):
             return True
         return sum(1 for t in protected_terms if t in lower) >= 4
 
@@ -232,15 +257,15 @@ class EvidenceGuardedOptimizer:
         return ordered
 
     def _format_compact(self, chunks: list[str], protected_terms: list[str], task_terms: set[str]) -> str:
-        protected = ", ".join(protected_terms[:35])
+        protected = ", ".join(protected_terms[:60])
         task = ", ".join(sorted(list(task_terms))[:35])
         body = "\n".join(f"- {c}" for c in chunks)
         return (
             "COMPRESSED_CONTEXT_CONTRACT:\n"
             "- Preserve all mandatory evidence, negations, constraints, risks, scores, and hiring decision signals.\n"
+            "- Concerns/risk evidence must be retained exactly, not paraphrased away.\n"
             "- Do not infer missing experience. Do not upgrade weak evidence.\n"
             f"MANDATORY_EVIDENCE_TERMS: {protected}\n"
-            f"TASK_TERMS: {task}\n"
             "PRESERVED_EVIDENCE:\n"
             f"{body}"
         )
@@ -248,7 +273,7 @@ class EvidenceGuardedOptimizer:
     def _inject_protected_header(self, text: str, protected_terms: list[str]) -> str:
         if not protected_terms:
             return text
-        return normalize_ws("MANDATORY_EVIDENCE_TERMS: " + ", ".join(protected_terms[:35]) + "\n" + text)
+        return normalize_ws("MANDATORY_EVIDENCE_TERMS: " + ", ".join(protected_terms[:60]) + "\n" + text)
 
     def _missing_terms(self, protected_terms: list[str], compressed: str) -> list[str]:
         lower = compressed.lower()

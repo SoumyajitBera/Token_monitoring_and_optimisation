@@ -11,6 +11,46 @@ from .costing import estimate_cost_usd
 from .quality import compare_outputs
 
 
+
+
+def _compact_agent_memory(agent_name: str, response_text: str) -> str:
+    """Compact inter-agent memory for optimized workflow.
+
+    Do not forward the full repaired JSON because it contains the entire evidence ledger.
+    Forward only the fields needed downstream.
+    """
+    try:
+        obj = json.loads(response_text)
+    except Exception:
+        return f"[{agent_name} COMPACT_OUTPUT]\n" + response_text[:900]
+
+    def _list(key: str, limit: int | None = None) -> list[str]:
+        value = obj.get(key, [])
+        if not isinstance(value, list):
+            value = [str(value)]
+        value = [str(x) for x in value if str(x).strip()]
+        return value if limit is None else value[:limit]
+
+    compact = {
+        "agent": agent_name,
+        "final_score": obj.get("final_score"),
+        "shortlist_decision": obj.get("shortlist_decision"),
+        "evidence_terms": _list("evidence_terms", 12),
+        "reasons": _list("reasons", 8),
+        "concerns": _list("concerns", None),
+    }
+    return f"[{agent_name} COMPACT_OUTPUT]\n" + json.dumps(compact, ensure_ascii=False, separators=(",", ":"))
+
+def _repair_severity_counts(responses) -> dict:
+    counts = {"none": 0, "minor": 0, "major": 0, "fallback": 0}
+    for item in responses:
+        # baseline item shape: (name, resp); optimized: (name, resp, opt)
+        resp = item[1]
+        sev = getattr(resp, "repair_severity", "none") or "none"
+        counts[sev] = counts.get(sev, 0) + 1
+    return counts
+
+
 def compare_baseline_vs_optimized(
     context: str,
     real: bool,
@@ -65,7 +105,7 @@ def compare_baseline_vs_optimized(
             print(resp.text[:1200])
             optimized_outputs.append((agent.name, resp, opt))
             # Critical: pass compressed state forward, not full raw history.
-            optimized_context = opt.optimized_text + f"\n\n[{agent.name} OUTPUT]\n{resp.text}"
+            optimized_context = opt.optimized_text + "\n\n" + _compact_agent_memory(agent.name, resp.text)
 
     base_in = sum(r.input_tokens for _, r in baseline_outputs)
     base_out = sum(r.output_tokens for _, r in baseline_outputs)
@@ -93,6 +133,7 @@ def compare_baseline_vs_optimized(
         "baseline_total_input_tokens": base_in,
         "baseline_total_output_tokens": base_out,
         "baseline_total_tokens": base_total,
+        "input_token_reduction_pct": (0.0 if base_in == 0 else (1 - opt_in / base_in) * 100),
         "optimized_total_input_tokens": opt_in,
         "optimized_total_output_tokens": opt_out,
         "optimized_total_tokens": opt_total,
@@ -104,6 +145,14 @@ def compare_baseline_vs_optimized(
         "quality": asdict(quality) if quality else None,
         "baseline_final_answer": final_baseline,
         "optimized_final_answer": final_optimized,
+        # repaired=True now means local JSON normalization/parse repair only.
+        # schema_valid=False means the LLM did not return parseable JSON; this should be rare.
+        "baseline_outputs_normalized_or_repaired": sum(1 for _, r in baseline_outputs if getattr(r, "repaired", False)),
+        "optimized_outputs_normalized_or_repaired": sum(1 for _, r, _ in optimized_outputs if getattr(r, "repaired", False)),
+        "baseline_repair_severity_counts": _repair_severity_counts(baseline_outputs),
+        "optimized_repair_severity_counts": _repair_severity_counts(optimized_outputs),
+        "baseline_invalid_json_outputs": sum(1 for _, r in baseline_outputs if getattr(r, "schema_valid", None) is False),
+        "optimized_invalid_json_outputs": sum(1 for _, r, _ in optimized_outputs if getattr(r, "schema_valid", None) is False),
         "optimized_context_reductions": [
             {
                 "agent": name,
@@ -146,7 +195,8 @@ def _print_summary(r: dict) -> None:
     print(f"Optimized input tokens:  {r['optimized_total_input_tokens']}")
     print(f"Optimized output tokens: {r['optimized_total_output_tokens']}")
     print(f"Optimized total tokens:  {r['optimized_total_tokens']}")
-    print(f"Token reduction:         {r['token_reduction_pct']:.2f}%")
+    print(f"Input token reduction:   {r.get('input_token_reduction_pct', 0):.2f}%")
+    print(f"Total token reduction:   {r['token_reduction_pct']:.2f}%")
     print("=" * 90)
     print("COST ANALYTICS")
     print("=" * 90)
@@ -164,11 +214,28 @@ def _print_summary(r: dict) -> None:
         print(f"Keyword/entity retention:{q['keyword_retention_pct']:.2f}%")
         print(f"Entity retention:       {q.get('entity_retention_pct', q['keyword_retention_pct']):.2f}%")
         print(f"Concern retention:      {q.get('concern_retention_pct', 0):.2f}%")
+        print(f"Raw concern retention:  {q.get('raw_concern_retention_pct', q.get('concern_retention_pct', 0)):.2f}%")
+        print(f"Weighted concern retention:{q.get('weighted_concern_retention_pct', q.get('concern_retention_pct', 0)):.2f}%")
         print(f"Reason overlap:         {q.get('reason_overlap_pct', 0):.2f}%")
         print(f"Output lexical sim:     {q['output_similarity']:.3f}")
+        print(f"Semantic similarity:    {q.get('semantic_similarity', 0):.3f} ({q.get('semantic_similarity_pct', 0):.2f}%)")
+        print(f"Semantic pass:          {q.get('semantic_pass')}")
+        print(f"Semantic formula:       {q.get('semantic_formula')}")
+        print(f"Semantic details:       {q.get('semantic_similarity_details', {})}")
+        print(f"Baseline outputs normalized/repaired: {r.get('baseline_outputs_normalized_or_repaired', 0)}")
+        print(f"Optimized outputs normalized/repaired:{r.get('optimized_outputs_normalized_or_repaired', 0)}")
+        print(f"Baseline repair severity: {r.get('baseline_repair_severity_counts', {})}")
+        print(f"Optimized repair severity:{r.get('optimized_repair_severity_counts', {})}")
+        print(f"Baseline invalid JSON outputs: {r.get('baseline_invalid_json_outputs', 0)}")
+        print(f"Optimized invalid JSON outputs:{r.get('optimized_invalid_json_outputs', 0)}")
         print(f"Overall retention est.: {q['overall_retention_pct']:.2f}%")
+        print(f"Score preserved:       {q.get('score_preserved')}")
+        print(f"Retention pass:        {q.get('retention_pass')}")
+        print(f"Retention formula:     {q.get('retention_formula')}")
+        print(f"Concern weight formula:{q.get('concern_weight_formula')}")
         print(f"Missing entities:       {q.get('missing_entities', [])}")
         print(f"Missing concerns:       {q.get('missing_concerns', [])}")
+        print(f"Missing concern weights:{q.get('missing_concern_weights', {})}")
         print(f"Baseline decision:      {q.get('baseline_decision')}")
         print(f"Optimized decision:     {q.get('optimized_decision')}")
         print(f"Baseline score:         {q.get('baseline_score')}")

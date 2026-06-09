@@ -6,76 +6,95 @@
   "call_delay_seconds": 10,
   "optimization_level": "guarded",
   "external_api_calls_made": 8,
-  "baseline_total_input_tokens": 12269,
-  "baseline_total_output_tokens": 1040,
-  "baseline_total_tokens": 13309,
-  "optimized_total_input_tokens": 8073,
-  "optimized_total_output_tokens": 934,
-  "optimized_total_tokens": 9007,
-  "token_reduction_pct": 32.32399128409347,
-  "baseline_cost_usd": 0.00806031,
-  "optimized_cost_usd": 0.00550093,
-  "savings_usd": 0.002559379999999999,
-  "cost_reduction_pct": 31.75287302845672,
+  "baseline_total_input_tokens": 12908,
+  "baseline_total_output_tokens": 780,
+  "baseline_total_tokens": 13688,
+  "input_token_reduction_pct": 37.108769755190586,
+  "optimized_total_input_tokens": 8118,
+  "optimized_total_output_tokens": 785,
+  "optimized_total_tokens": 8903,
+  "token_reduction_pct": 34.95762711864406,
+  "baseline_cost_usd": 0.00823192,
+  "optimized_cost_usd": 0.0054097699999999995,
+  "savings_usd": 0.0028221500000000007,
+  "cost_reduction_pct": 34.28301052488363,
   "quality": {
     "decision_preserved": true,
-    "score_delta": 0.0,
-    "keyword_retention_pct": 96.15384615384616,
-    "entity_retention_pct": 96.15384615384616,
-    "concern_retention_pct": 66.66666666666667,
-    "reason_overlap_pct": 52.17391304347826,
-    "output_similarity": 0.5354330708661418,
-    "overall_retention_pct": 91.64715719063545,
+    "score_delta": 0.20000000000000018,
+    "keyword_retention_pct": 100.0,
+    "entity_retention_pct": 100.0,
+    "concern_retention_pct": 100.0,
+    "raw_concern_retention_pct": 100.0,
+    "weighted_concern_retention_pct": 100.0,
+    "reason_overlap_pct": 100.0,
+    "output_similarity": 0.8666666666666667,
+    "overall_retention_pct": 100.0,
     "baseline_decision": "shortlist",
     "optimized_decision": "shortlist",
-    "baseline_score": 7.0,
-    "optimized_score": 7.0,
-    "missing_entities": [
-      "llm"
-    ],
-    "missing_concerns": [
-      "limited deep mlops experience with kubernetes",
-      "weak evidence for online monitoring"
-    ]
+    "baseline_score": 8.0,
+    "optimized_score": 7.8,
+    "missing_entities": [],
+    "missing_concerns": [],
+    "missing_concern_weights": {},
+    "score_preserved": true,
+    "retention_pass": true,
+    "retention_formula": "0.30*decision + 0.15*score + 0.20*entity + 0.25*weighted_concern + 0.10*reason",
+    "concern_weight_formula": "100 * retained_concern_weight / baseline_concern_weight; critical=3.0, important=2.5, minor metadata=0.5, default=1.0"
   },
-  "baseline_final_answer": "final_score: 7\nshortlist_decision: Shortlist\nevidence_terms: [python, fastapi, sql, rag, vector databases, milvus, docker, gcp, cloud run, mlops, ci/cd, api, nlq-sql, kubernetes]\nreasons: \n* Strong experience with Python, FastAPI, SQL, and RAG\n* Proficient in vector databases, including Milvus\n* Experience with Docker, GCP, and Cloud Run\n* Demonstrated ability to build agentic AI systems and optimize LLM cost\n* Strong project ownership and cost awareness\nconcerns: \n* Limited deep MLOps experience with Kubernetes, feature stores, and model registry lifecycle\n* Needs stronger quality evaluation using human labels and task-specific acceptance metrics\n* Weak evidence for online monitoring, A/B testing, and model drift lifecycle\n* Risk of shallow MLOps and no real production monitoring\ninterview_plan: \n* How would you handle a situation where the model drifts significantly in production?\n* Can you explain your experience with Kubernetes and how you would deploy a model using it?\n* How would you implement real-time monitoring and A/B testing for a machine learning model?\n* Can you walk us through your approach to addressing the",
-  "optimized_final_answer": "final_score: 7\nshortlist_decision: Shortlist\nevidence_terms: [python, fastapi, sql, rag, milvus, docker, gcp, cloud run, kubernetes, mlops, nlq-sql, agent, agentic, api, ci/cd, github]\nreasons: \n* Applied AI engineering experience with Python, FastAPI, and SQL\n* Familiarity with cloud deployment, CI/CD, and Docker\n* Experience with vector databases (Milvus) and RAG\n* Strong project ownership and cost awareness\nconcerns: \n* Limited deep MLOps experience with Kubernetes and feature stores\n* No production Kubernetes ownership experience\n* Risk of shallow MLOps and no real production monitoring\n* Need for stronger quality evaluation using human labels and task-specific acceptance metrics\ninterview_plan: \n* How would you handle MLOps gap and learn model registry, CI/CD for models, drift monitoring, and feature stores?\n* How would you prove your token optimizer does not corrupt hiring decisions and preserve final decision and score deltas?\n* Can you explain your experience with cloud deployment and CI/CD pipelines?\n* How do you approach model evaluation and quality assessment in your work?",
+  "baseline_final_answer": "{\"final_score\":8.0,\"shortlist_decision\":\"Shortlist\",\"evidence_terms\":[\"python\",\"fastapi\",\"sql\",\"langchain\",\"rag\",\"vector databases\",\"milvus\",\"docker\",\"gcp cloud run\",\"api integration\",\"ci/cd\",\"cloud deployment\",\"mlops\",\"model registry\",\"feature store\",\"kubernetes\",\"online monitoring\",\"concept drift\",\"model drift\",\"human labels\",\"acceptance metrics\"],\"reasons\":[\"python fastapi sql skills\",\"api integration experience\",\"cloud run docker deployment\",\"cost awareness and token optimization\",\"honest gap identification\",\"mlops governance awareness\",\"rag vector database experience\"],\"concerns\":[\"concept drift validation gap\",\"limited deep mlops experience\",\"limited feature store experience\",\"limited model registry lifecycle\",\"model drift validation gap\",\"needs human labels\",\"needs task-specific acceptance metrics\",\"weak evidence for online monitoring\"],\"interview_plan\":[\"Ask about production monitoring\",\"Discuss model drift and concept drift\",\"Evaluate token optimizer effectiveness\",\"Explore MLOps gap and learning plan\"],\"schema_valid\":true}",
+  "optimized_final_answer": "{\"final_score\":7.8,\"shortlist_decision\":\"Shortlist\",\"evidence_terms\":[\"python\",\"fastapi\",\"sql\",\"langchain\",\"rag\",\"milvus\",\"docker\",\"gcp\",\"cloud run\",\"api integration\",\"ci/cd\",\"cost awareness\",\"mlops\",\"model drift\",\"concept drift\",\"online monitoring\",\"kubernetes\",\"feature store\",\"model registry\"],\"reasons\":[\"python fastapi sql skills\",\"cloud run docker deployment\",\"cost awareness and token optimization\",\"honest gap identification\",\"mlops governance awareness\",\"rag vector database experience\"],\"concerns\":[\"concept drift validation gap\",\"limited deep mlops experience\",\"limited feature store experience\",\"limited model registry lifecycle\",\"model drift validation gap\",\"needs human labels\",\"needs task-specific acceptance metrics\",\"weak evidence for online monitoring\"],\"interview_plan\":[\"Ask about production monitoring\",\"Discuss model drift and concept drift\",\"Inquire about MLOps experience\",\"Explore cost optimization strategies\"],\"schema_valid\":true}",
+  "baseline_outputs_normalized_or_repaired": 4,
+  "optimized_outputs_normalized_or_repaired": 4,
+  "baseline_repair_severity_counts": {
+    "none": 0,
+    "minor": 4,
+    "major": 0,
+    "fallback": 0
+  },
+  "optimized_repair_severity_counts": {
+    "none": 0,
+    "minor": 4,
+    "major": 0,
+    "fallback": 0
+  },
+  "baseline_invalid_json_outputs": 0,
+  "optimized_invalid_json_outputs": 0,
   "optimized_context_reductions": [
     {
       "agent": "Resume Intelligence Agent",
-      "context_reduction_pct": 55.368421052631575,
+      "context_reduction_pct": 52.24561403508772,
       "original_tokens": 2850,
-      "optimized_tokens": 1272,
+      "optimized_tokens": 1361,
       "retention_guard_passed": true,
       "missing_protected_terms": [],
-      "protected_terms_count": 35
+      "protected_terms_count": 70
     },
     {
       "agent": "JD Matching Agent",
-      "context_reduction_pct": -6.555269922879181,
-      "original_tokens": 1556,
-      "optimized_tokens": 1658,
+      "context_reduction_pct": -22.20408163265306,
+      "original_tokens": 1225,
+      "optimized_tokens": 1497,
       "retention_guard_passed": true,
       "missing_protected_terms": [],
-      "protected_terms_count": 35
+      "protected_terms_count": 70
     },
     {
       "agent": "Interview Intelligence Agent",
-      "context_reduction_pct": 0.6834910620399537,
-      "original_tokens": 1902,
-      "optimized_tokens": 1889,
+      "context_reduction_pct": -21.290801186943618,
+      "original_tokens": 1348,
+      "optimized_tokens": 1635,
       "retention_guard_passed": true,
       "missing_protected_terms": [],
-      "protected_terms_count": 35
+      "protected_terms_count": 70
     },
     {
       "agent": "Recruiter Decision Agent",
-      "context_reduction_pct": 4.095238095238097,
-      "original_tokens": 2100,
-      "optimized_tokens": 2014,
+      "context_reduction_pct": -18.085106382978733,
+      "original_tokens": 1504,
+      "optimized_tokens": 1776,
       "retention_guard_passed": true,
       "missing_protected_terms": [],
-      "protected_terms_count": 35
+      "protected_terms_count": 70
     }
   ]
 }
