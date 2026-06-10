@@ -12,6 +12,12 @@ from tokenopt.agentic.rate_limiter import GroqFreeTierPacer
 from tokenopt.core.optimizer import TokenOptimizer
 from tokenopt.core.schemas import TokenOptimizationConfig
 from tokenopt.tokenization import count_tokens
+from tokenopt.governance import (
+    contract_is_schema_critical,
+    get_output_contract,
+    required_fields_for_contract,
+    schema_instruction_for_contract,
+)
 
 from prodsync_agentic_groq_test import CANDIDATE_PROFILE, JOB_DESCRIPTION, repeated_policy_context
 
@@ -39,15 +45,27 @@ def main() -> None:
     previous_outputs = []
     for name, prompt, query in prompts:
         policy = AGENT_POLICIES.get(name, {})
+        contract = get_output_contract(name)
+        schema_instruction = schema_instruction_for_contract(name, contract)
+        schema_strict = bool(policy.get("schema_strict", False) or contract_is_schema_critical(contract))
         optimizer = TokenOptimizer(TokenOptimizationConfig(
             mode=policy.get("mode", os.getenv("TOKENOPT_MODE", "balanced")),
             max_input_tokens=int(policy.get("max_tokens", 3000)),
             min_retention_score=float(policy.get("min_retention", 0.86)),
             expected_output_tokens=int(policy.get("max_completion", 450)),
+            schema_strict=schema_strict,
+            protected_texts=["REQUIRED_JSON_FIELDS: " + ", ".join(required_fields_for_contract(contract))] if required_fields_for_contract(contract) else [],
+            schema_critical_terms=required_fields_for_contract(contract),
             debug=True,
         ))
         context = route_context_for_agent(name, memory, CANDIDATE_PROFILE, JOB_DESCRIPTION, evidence, previous_outputs)
-        result = optimizer.optimize(prompt=prompt, context=context, query=query)
+        result = optimizer.optimize(
+            prompt=prompt,
+            context=context,
+            query=query,
+            protected_texts=["REQUIRED_JSON_FIELDS: " + ", ".join(required_fields_for_contract(contract))] if required_fields_for_contract(contract) else [],
+            schema_critical_terms=required_fields_for_contract(contract),
+        )
         est_total = count_tokens(result.optimized_prompt) + int(policy.get("max_completion", 450)) + 120
         state = pacer.wait(est_total)
         rows.append({
@@ -63,6 +81,8 @@ def main() -> None:
             "reduction_percentage": result.metrics.reduction_percentage,
             "retention_score": result.metrics.retention_score,
             "constraint_retention": result.metrics.constraint_retention,
+            "schema_strict": optimizer.config.schema_strict,
+            "required_fields": required_fields_for_contract(contract),
         })
         previous_outputs.append(f"[{name}_SIMULATED_OUTPUT] compact result placeholder for next-agent routing")
 

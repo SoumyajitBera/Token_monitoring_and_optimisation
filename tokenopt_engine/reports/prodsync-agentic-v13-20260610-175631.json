@@ -1,0 +1,625 @@
+{
+  "run_id": "prodsync-agentic-v13-20260610-175631",
+  "model": "llama-3.3-70b-versatile",
+  "default_mode": "balanced",
+  "started_at_utc": "2026-06-10T17:56:31.899239+00:00",
+  "finished_at_utc": "2026-06-10T17:57:41.145044+00:00",
+  "total_agents": 6,
+  "total_actual_prompt_tokens": 10031,
+  "total_actual_completion_tokens": 1918,
+  "total_actual_tokens": 11949,
+  "total_actual_cost_usd": 0.00743351,
+  "total_reconciled_savings_usd": 0.00165111,
+  "total_framework_tokens_saved": 2546,
+  "average_retention_score": 0.9145,
+  "worst_retention_score": 0.8771,
+  "accepted_agents": 6,
+  "rolled_back_agents": 0,
+  "high_risk_agents": 3,
+  "schema_valid_agents": 5,
+  "schema_repaired_agents": 3,
+  "schema_invalid_agents": 1,
+  "total_sleep_seconds": 61.17,
+  "memory_compaction": {
+    "raw_memory_tokens": 1606,
+    "compact_memory_tokens": 1314,
+    "memory_tokens_saved": 292,
+    "memory_reduction_percentage": 18.1818
+  },
+  "calls": [
+    {
+      "agent_name": "ResumeIntelligenceAgent",
+      "objective": "Extract candidate skills, experience, project evidence, and risk signals.",
+      "agent_mode": "balanced",
+      "estimated_total_tokens_for_pacing": 2007,
+      "pacer_sleep_seconds": 0.0,
+      "optimizer_metrics": {
+        "original_tokens": 1739,
+        "optimized_tokens": 1388,
+        "tokens_saved": 351,
+        "reduction_percentage": 20.184,
+        "estimated_cost_before": 0.00135781,
+        "estimated_cost_after": 0.00115072,
+        "estimated_savings": 0.00020709,
+        "retention_score": 0.9379,
+        "entity_retention": 0.8267,
+        "numeric_retention": 1.0,
+        "constraint_retention": 0.9756,
+        "semantic_similarity": 0.9831,
+        "keyword_coverage": 0.9,
+        "cost_reduction_score": 0.1525,
+        "optimization_success_score": 0.6237,
+        "risk_label": "MEDIUM",
+        "status": "accepted",
+        "reason": null
+      },
+      "groq_usage": {
+        "queue_time": 0.054771511,
+        "prompt_tokens": 1607,
+        "prompt_time": 0.105983247,
+        "completion_tokens": 238,
+        "completion_time": 0.55984877,
+        "total_tokens": 1845,
+        "total_time": 0.665832017
+      },
+      "estimated_prompt_tokens_sent": 1467,
+      "actual_prompt_tokens": 1607,
+      "actual_completion_tokens": 238,
+      "actual_total_tokens": 1845,
+      "prompt_token_estimation_error_pct": 9.5433,
+      "actual_cost_usd": 0.00113615,
+      "reconciled_savings_usd": 0.00022685,
+      "response_preview": "{\n  \"skills\": [\n    \"Python\",\n    \"FastAPI\",\n    \"SQL\",\n    \"Pandas\",\n    \"scikit-learn\",\n    \"TensorFlow\",\n    \"PyTorch\",\n    \"LangChain\",\n    \"Milvus\",\n    \"SentenceTransformers\",\n    \"Watsonx\",\n    \"Groq API integration\",\n    \"Docker\",\n    \"GCP Cloud Run\",\n    \"TiDB\",\n    \"Elasticsearch\",\n    \"spaCy\",\n    \"KeyBERT\"\n  ],\n  \"years_of_experience\": 3.9,\n  \"project_evidence\": [\n    \"RAG pipeline: Milvus vector store, SentenceTransformers embeddings, Watsonx answering, document ingestion, metadata extraction, retrieval API, and PDF generation\"\n  ],\n  \"strengths\": [\n    \"AI engineering\",\n    \"backend API integration\",\n    \"RAG\",\n    \"LLM apps\",\n    \"governance metrics\",\n    \"practical deployment\"\n  ],\n  \"weak_evidence\": [\n    \"Limited evidence of experience with cost monitoring and production safety\"\n  ],\n  \"missing_evidence\": [\n    \"GitHub evidence\",\n    \"JD matching\",\n    \"skill-gap planning\"\n  ],\n  \"red_flags\": [\n    \"Lack of explicit mention of experience with vector search and deployment\"\n  ],\n  \"_extra\": {\n    \"seniority\": \"Mid-level\"\n  }\n}",
+      "normalized_output": {
+        "skills": [
+          "Python",
+          "FastAPI",
+          "SQL",
+          "Pandas",
+          "scikit-learn",
+          "TensorFlow",
+          "PyTorch",
+          "LangChain",
+          "Milvus",
+          "SentenceTransformers",
+          "Watsonx",
+          "Groq API integration",
+          "Docker",
+          "GCP Cloud Run",
+          "TiDB",
+          "Elasticsearch",
+          "spaCy",
+          "KeyBERT"
+        ],
+        "years_of_experience": 3.9,
+        "project_evidence": [
+          "RAG pipeline: Milvus vector store, SentenceTransformers embeddings, Watsonx answering, document ingestion, metadata extraction, retrieval API, and PDF generation"
+        ],
+        "strengths": [
+          "AI engineering",
+          "backend API integration",
+          "RAG",
+          "LLM apps",
+          "governance metrics",
+          "practical deployment"
+        ],
+        "weak_evidence": [
+          "Limited evidence of experience with cost monitoring and production safety"
+        ],
+        "missing_evidence": [
+          "GitHub evidence",
+          "JD matching",
+          "skill-gap planning"
+        ],
+        "red_flags": [
+          "Lack of explicit mention of experience with vector search and deployment"
+        ],
+        "_extra": {
+          "seniority": "Mid-level"
+        }
+      },
+      "schema_valid": true,
+      "schema_repaired": false,
+      "schema_errors": [],
+      "schema_warnings": [],
+      "schema_repair_actions": [],
+      "status": "ok",
+      "error": null
+    },
+    {
+      "agent_name": "JDRequirementAgent",
+      "objective": "Extract mandatory and preferred role requirements from the JD.",
+      "agent_mode": "balanced",
+      "estimated_total_tokens_for_pacing": 1926,
+      "pacer_sleep_seconds": 7.097,
+      "optimizer_metrics": {
+        "original_tokens": 1506,
+        "optimized_tokens": 1347,
+        "tokens_saved": 159,
+        "reduction_percentage": 10.5578,
+        "estimated_cost_before": 0.00118874,
+        "estimated_cost_after": 0.00109493,
+        "estimated_savings": 9.381e-05,
+        "retention_score": 0.9773,
+        "entity_retention": 0.9538,
+        "numeric_retention": 1.0,
+        "constraint_retention": 0.985,
+        "semantic_similarity": 0.9794,
+        "keyword_coverage": 0.9667,
+        "cost_reduction_score": 0.0789,
+        "optimization_success_score": 0.6179,
+        "risk_label": "LOW",
+        "status": "accepted",
+        "reason": null
+      },
+      "groq_usage": {
+        "queue_time": 0.055832798,
+        "prompt_tokens": 1561,
+        "prompt_time": 0.21966408,
+        "completion_tokens": 291,
+        "completion_time": 1.606554942,
+        "total_tokens": 1852,
+        "total_time": 1.826219022
+      },
+      "estimated_prompt_tokens_sent": 1426,
+      "actual_prompt_tokens": 1561,
+      "actual_completion_tokens": 291,
+      "actual_total_tokens": 1852,
+      "prompt_token_estimation_error_pct": 9.467,
+      "actual_cost_usd": 0.00115088,
+      "reconciled_savings_usd": 0.00010269,
+      "response_preview": "{\n  \"must_have_requirements\": [\n    \"Python\",\n    \"API development\",\n    \"LLM integration\"\n  ],\n  \"good_to_have_skills\": [\n    \"FastAPI\",\n    \"SQL\",\n    \"Pandas\",\n    \"scikit-learn\",\n    \"TensorFlow\",\n    \"PyTorch\",\n    \"LangChain\",\n    \"Milvus\",\n    \"SentenceTransformers\",\n    \"Watsonx\",\n    \"Groq API integration\",\n    \"Docker\",\n    \"GCP Cloud Run\",\n    \"TiDB\",\n    \"Elasticsearch\",\n    \"spaCy\",\n    \"KeyBERT\"\n  ],\n  \"domain_expectations\": [\n    \"AI/ML or LLM application development\",\n    \"RAG design\",\n    \"LLM evaluation\",\n    \"prompt optimization\",\n    \"vector search\",\n    \"deployment\",\n    \"cost monitoring\",\n    \"production safety\"\n  ],\n  \"screening_constraints\": [\n    \"Minimum 2+ years professional AI/ML or LLM application development experience\",\n    \"Do not shortlist if the candidate lacks Python, API development, and LLM integration evidence\"\n  ],\n  \"scoring_weights\": {\n    \"technical_fit\": 40,\n    \"project_evidence\": 25,\n    \"communication_readiness\": 15,\n    \"role_alignment\": 10,\n    \"learning_velocity\": 10\n  }\n}",
+      "normalized_output": {
+        "must_have_requirements": [
+          "Python",
+          "API development",
+          "LLM integration"
+        ],
+        "good_to_have_skills": [
+          "FastAPI",
+          "SQL",
+          "Pandas",
+          "scikit-learn",
+          "TensorFlow",
+          "PyTorch",
+          "LangChain",
+          "Milvus",
+          "SentenceTransformers",
+          "Watsonx",
+          "Groq API integration",
+          "Docker",
+          "GCP Cloud Run",
+          "TiDB",
+          "Elasticsearch",
+          "spaCy",
+          "KeyBERT"
+        ],
+        "domain_expectations": [
+          "AI/ML or LLM application development",
+          "RAG design",
+          "LLM evaluation",
+          "prompt optimization",
+          "vector search",
+          "deployment",
+          "cost monitoring",
+          "production safety"
+        ],
+        "screening_constraints": [
+          "Minimum 2+ years professional AI/ML or LLM application development experience",
+          "Do not shortlist if the candidate lacks Python, API development, and LLM integration evidence"
+        ],
+        "scoring_weights": {
+          "technical_fit": 40,
+          "project_evidence": 25,
+          "communication_readiness": 15,
+          "role_alignment": 10,
+          "learning_velocity": 10
+        }
+      },
+      "schema_valid": true,
+      "schema_repaired": false,
+      "schema_errors": [],
+      "schema_warnings": [],
+      "schema_repair_actions": [],
+      "status": "ok",
+      "error": null
+    },
+    {
+      "agent_name": "SemanticFitScoringAgent",
+      "objective": "Score candidate-role fit with explainable reasoning.",
+      "agent_mode": "conservative",
+      "estimated_total_tokens_for_pacing": 1972,
+      "pacer_sleep_seconds": 5.972,
+      "optimizer_metrics": {
+        "original_tokens": 1866,
+        "optimized_tokens": 1353,
+        "tokens_saved": 513,
+        "reduction_percentage": 27.492,
+        "estimated_cost_before": 0.00143274,
+        "estimated_cost_after": 0.00113007,
+        "estimated_savings": 0.00030267,
+        "retention_score": 0.9049,
+        "entity_retention": 0.9531,
+        "numeric_retention": 0.9412,
+        "constraint_retention": 0.985,
+        "semantic_similarity": 0.9772,
+        "keyword_coverage": 0.5667,
+        "cost_reduction_score": 0.2113,
+        "optimization_success_score": 0.6275,
+        "risk_label": "MEDIUM",
+        "status": "accepted",
+        "reason": null
+      },
+      "groq_usage": {
+        "queue_time": 0.050621217,
+        "prompt_tokens": 1570,
+        "prompt_time": 0.081651002,
+        "completion_tokens": 272,
+        "completion_time": 0.759737377,
+        "total_tokens": 1842,
+        "total_time": 0.841388379
+      },
+      "estimated_prompt_tokens_sent": 1432,
+      "actual_prompt_tokens": 1570,
+      "actual_completion_tokens": 272,
+      "actual_total_tokens": 1842,
+      "prompt_token_estimation_error_pct": 9.6369,
+      "actual_cost_usd": 0.00114118,
+      "reconciled_savings_usd": 0.00033184,
+      "response_preview": "{\n  \"fit_score\": 85,\n  \"matched_skills\": [\n    \"Python\",\n    \"FastAPI\",\n    \"LLM\",\n    \"RAG\",\n    \"LangChain\",\n    \"Milvus\",\n    \"Embeddings\",\n    \"API\",\n    \"Docker\",\n    \"GCP Cloud Run\"\n  ],\n  \"partial_matches\": [\n    \"Vector search\",\n    \"Prompt optimization\",\n    \"Cost monitoring\",\n    \"Production safety\"\n  ],\n  \"missing_skills\": [\n    \"Agentic\",\n    \"CI/CD\",\n    \"Monitoring\",\n    \"Cost optimization\",\n    \"Evaluation\"\n  ],\n  \"evidence_strength\": \"80\",\n  \"rejection_risks\": [\n    \"Lack of experience in Agentic\",\n    \"Insufficient evidence of CI/CD and monitoring skills\"\n  ],\n  \"scoring_rationale\": [\n    \"The candidate has strong Python and backend API development experience, with relevant skills in LLM, RAG, and LangChain. However, there are some gaps in skills such as Agentic, CI/CD, and monitoring. The candidate's experience in AI engineering, RAG pipeline, and LLM application development is a strong plus. The fit score is 85 due to the candidate's strong technical skills and relevant experience, but with some areas for improvement.\"\n  ]\n}",
+      "normalized_output": {
+        "fit_score": 85,
+        "matched_skills": [
+          "Python",
+          "FastAPI",
+          "LLM",
+          "RAG",
+          "LangChain",
+          "Milvus",
+          "Embeddings",
+          "API",
+          "Docker",
+          "GCP Cloud Run"
+        ],
+        "partial_matches": [
+          "Vector search",
+          "Prompt optimization",
+          "Cost monitoring",
+          "Production safety"
+        ],
+        "missing_skills": [
+          "Agentic",
+          "CI/CD",
+          "Monitoring",
+          "Cost optimization",
+          "Evaluation"
+        ],
+        "evidence_strength": "80",
+        "rejection_risks": [
+          "Lack of experience in Agentic",
+          "Insufficient evidence of CI/CD and monitoring skills"
+        ],
+        "scoring_rationale": [
+          "The candidate has strong Python and backend API development experience, with relevant skills in LLM, RAG, and LangChain. However, there are some gaps in skills such as Agentic, CI/CD, and monitoring. The candidate's experience in AI engineering, RAG pipeline, and LLM application development is a strong plus. The fit score is 85 due to the candidate's strong technical skills and relevant experience, but with some areas for improvement."
+        ]
+      },
+      "schema_valid": true,
+      "schema_repaired": true,
+      "schema_errors": [],
+      "schema_warnings": [],
+      "schema_repair_actions": [
+        "coerce_string:evidence_strength",
+        "coerce_list:scoring_rationale"
+      ],
+      "status": "ok",
+      "error": null
+    },
+    {
+      "agent_name": "SkillGapReadinessAgent",
+      "objective": "Create a 2-8 week readiness plan without losing constraints.",
+      "agent_mode": "balanced",
+      "estimated_total_tokens_for_pacing": 2044,
+      "pacer_sleep_seconds": 6.955,
+      "optimizer_metrics": {
+        "original_tokens": 1853,
+        "optimized_tokens": 1345,
+        "tokens_saved": 508,
+        "reduction_percentage": 27.415,
+        "estimated_cost_before": 0.00148827,
+        "estimated_cost_after": 0.00118855,
+        "estimated_savings": 0.00029972,
+        "retention_score": 0.8771,
+        "entity_retention": 0.9583,
+        "numeric_retention": 0.8824,
+        "constraint_retention": 0.9807,
+        "semantic_similarity": 0.9709,
+        "keyword_coverage": 0.4667,
+        "cost_reduction_score": 0.2014,
+        "optimization_success_score": 0.6068,
+        "risk_label": "HIGH",
+        "status": "accepted",
+        "reason": null
+      },
+      "groq_usage": {
+        "queue_time": 0.161997649,
+        "prompt_tokens": 1565,
+        "prompt_time": 0.080313149,
+        "completion_tokens": 380,
+        "completion_time": 0.920078408,
+        "total_tokens": 1945,
+        "total_time": 1.000391557
+      },
+      "estimated_prompt_tokens_sent": 1424,
+      "actual_prompt_tokens": 1565,
+      "actual_completion_tokens": 380,
+      "actual_total_tokens": 1945,
+      "prompt_token_estimation_error_pct": 9.9017,
+      "actual_cost_usd": 0.00122355,
+      "reconciled_savings_usd": 0.0003294,
+      "response_preview": "{\n  \"priority_gaps\": [\n    \"RAG design\",\n    \"LLM evaluation\",\n    \"prompt optimization\",\n    \"vector search\",\n    \"deployment\",\n    \"cost monitoring\",\n    \"production safety\"\n  ],\n  \"week_by_week_plan\": [\n    {\n      \"week\": 1,\n      \"actions\": [\n        \"Review RAG pipeline and LLM integration\",\n        \"Practice prompt optimization techniques\"\n      ]\n    },\n    {\n      \"week\": 2,\n      \"actions\": [\n        \"Implement vector search and deployment using Milvus and Docker\",\n        \"Monitor cost and production safety using GCP Cloud Run\"\n      ]\n    },\n    {\n      \"week\": 3,\n      \"actions\": [\n        \"Improve project evidence by adding more AI/ML projects to GitHub\",\n        \"Enhance resume with relevant skills and experience\"\n      ]\n    },\n    {\n      \"week\": 4,\n      \"actions\": [\n        \"Practice mock interviews with focus on RAG design and LLM evaluation\",\n        \"Review and improve communication readiness\"\n      ]\n    }\n  ],\n  \"project_improvements\": [\n    \"Add more AI/ML projects to GitHub\",\n    \"Implement RAG pipeline using Milvus and SentenceTransformers\",\n    \"Integrate LLM with vector search and deployment\"\n  ],\n  \"resume_fixes\": [\n    \"Add relevant skills such as Python, FastAPI, and LLM integration\",\n    \"Highlight experience with RAG pipeline and AI/ML project development\",\n    \"Emphasize strong Python and backend API development experience\"\n  ],\n  \"interview_readiness_actions\": [\n    \"Practice mock interviews with focus on RAG design and LLM evaluation\",\n    \"Review and improve communication readiness\",\n    \"Prepare to answer questions on prompt optimizati",
+      "normalized_output": {
+        "priority_gaps": [
+          "RAG design",
+          "LLM evaluation",
+          "prompt optimization",
+          "vector search",
+          "deployment",
+          "cost monitoring",
+          "production safety"
+        ],
+        "week_by_week_plan": [
+          {
+            "week": 1,
+            "actions": [
+              "Review RAG pipeline and LLM integration",
+              "Practice prompt optimization techniques"
+            ]
+          },
+          {
+            "week": 2,
+            "actions": [
+              "Implement vector search and deployment using Milvus and Docker",
+              "Monitor cost and production safety using GCP Cloud Run"
+            ]
+          },
+          {
+            "week": 3,
+            "actions": [
+              "Improve project evidence by adding more AI/ML projects to GitHub",
+              "Enhance resume with relevant skills and experience"
+            ]
+          },
+          {
+            "week": 4,
+            "actions": [
+              "Practice mock interviews with focus on RAG design and LLM evaluation",
+              "Review and improve communication readiness"
+            ]
+          }
+        ],
+        "project_improvements": [
+          "Add more AI/ML projects to GitHub",
+          "Implement RAG pipeline using Milvus and SentenceTransformers",
+          "Integrate LLM with vector search and deployment"
+        ],
+        "resume_fixes": [
+          "Add relevant skills such as Python, FastAPI, and LLM integration",
+          "Highlight experience with RAG pipeline and AI/ML project development",
+          "Emphasize strong Python and backend API development experience"
+        ],
+        "interview_readiness_actions": [
+          "Practice mock interviews with focus on RAG design and LLM evaluation",
+          "Review and improve communication readiness",
+          "Prepare to answer questions on prompt optimization, vector search, and production safety"
+        ]
+      },
+      "schema_valid": true,
+      "schema_repaired": false,
+      "schema_errors": [],
+      "schema_warnings": [],
+      "schema_repair_actions": [],
+      "status": "ok",
+      "error": null
+    },
+    {
+      "agent_name": "InterviewQuestionAgent",
+      "objective": "Generate targeted AI mock interview questions.",
+      "agent_mode": "aggressive",
+      "estimated_total_tokens_for_pacing": 2068,
+      "pacer_sleep_seconds": 34.903,
+      "optimizer_metrics": {
+        "original_tokens": 1835,
+        "optimized_tokens": 1349,
+        "tokens_saved": 486,
+        "reduction_percentage": 26.485,
+        "estimated_cost_before": 0.00149345,
+        "estimated_cost_after": 0.00120671,
+        "estimated_savings": 0.00028674,
+        "retention_score": 0.8806,
+        "entity_retention": 0.8889,
+        "numeric_retention": 0.8571,
+        "constraint_retention": 0.9789,
+        "semantic_similarity": 0.9674,
+        "keyword_coverage": 0.6333,
+        "cost_reduction_score": 0.192,
+        "optimization_success_score": 0.6052,
+        "risk_label": "HIGH",
+        "status": "accepted",
+        "reason": null
+      },
+      "groq_usage": {
+        "queue_time": 0.161786166,
+        "prompt_tokens": 1562,
+        "prompt_time": 0.137448912,
+        "completion_tokens": 520,
+        "completion_time": 1.303294003,
+        "total_tokens": 2082,
+        "total_time": 1.440742915
+      },
+      "estimated_prompt_tokens_sent": 1428,
+      "actual_prompt_tokens": 1562,
+      "actual_completion_tokens": 520,
+      "actual_total_tokens": 2082,
+      "prompt_token_estimation_error_pct": 9.3838,
+      "actual_cost_usd": 0.00133238,
+      "reconciled_savings_usd": 0.00031365,
+      "response_preview": "{\n  \"technical_questions\": [],\n  \"project_deep_dive_questions\": [],\n  \"system_design_questions\": [],\n  \"ml_fundamentals_questions\": [],\n  \"behavioral_questions\": [],\n  \"recruiter_screening_questions\": [],\n  \"_extra\": {\n    \"items\": [\n      \"```json\",\n      \"{\",\n      \"\\\"technical_questions\\\": [\",\n      \"\\\"How do you optimize the performance of a FastAPI application?\\\",\",\n      \"\\\"What is the difference between LangChain and Milvus, and when would you use each?\\\",\",\n      \"\\\"Can you explain the concept of embeddings in the context of natural language processing, and how you have used SentenceTransformers in your previous projects?\\\"\",\n      \"],\",\n      \"\\\"project_deep_dive_questions\\\": [\",\n      \"\\\"Can you walk me through your experience with RAG pipeline development, and how you handled document ingestion, metadata extraction, and retrieval API integration?\\\",\",\n      \"\\\"How did you design and implement the vector search functionality in your previous project, and what were some of the challenges you faced?\\\",\",\n      \"\\\"Can you describe your experience with deploying AI models using Docker and GCP Cloud Run, and how you ensured production safety and cost monitoring?\\\"\",\n      \"],\",\n      \"\\\"system_design_questions\\\": [\",\n      \"\\\"Design a system for a large-scale language model deployment, including data ingestion, processing, and serving, using technologies such as TiDB, Elasticsearch, and spaCy.\\\",\",\n      \"\\\"How would you architect a system for real-time question answering using a combination of natural language processing and machine learning, incorporating tools like ",
+      "normalized_output": {
+        "technical_questions": [],
+        "project_deep_dive_questions": [],
+        "system_design_questions": [],
+        "ml_fundamentals_questions": [],
+        "behavioral_questions": [],
+        "recruiter_screening_questions": [],
+        "_extra": {
+          "items": [
+            "```json",
+            "{",
+            "\"technical_questions\": [",
+            "\"How do you optimize the performance of a FastAPI application?\",",
+            "\"What is the difference between LangChain and Milvus, and when would you use each?\",",
+            "\"Can you explain the concept of embeddings in the context of natural language processing, and how you have used SentenceTransformers in your previous projects?\"",
+            "],",
+            "\"project_deep_dive_questions\": [",
+            "\"Can you walk me through your experience with RAG pipeline development, and how you handled document ingestion, metadata extraction, and retrieval API integration?\",",
+            "\"How did you design and implement the vector search functionality in your previous project, and what were some of the challenges you faced?\",",
+            "\"Can you describe your experience with deploying AI models using Docker and GCP Cloud Run, and how you ensured production safety and cost monitoring?\"",
+            "],",
+            "\"system_design_questions\": [",
+            "\"Design a system for a large-scale language model deployment, including data ingestion, processing, and serving, using technologies such as TiDB, Elasticsearch, and spaCy.\",",
+            "\"How would you architect a system for real-time question answering using a combination of natural language processing and machine learning, incorporating tools like Watsonx and Groq API?\",",
+            "\"Can you design a system for efficient and scalable vector search, including data storage, indexing, and query optimization, using technologies such as Milvus and SentenceTransformers?\"",
+            "],",
+            "\"ml_fundamentals_questions\": [",
+            "\"Can you explain the concept of transfer learning in the context of natural language processing, and how you have used pre-trained models like PyTorch and scikit-learn in your previous projects?\",",
+            "\"How do you approach hyperparameter tuning for machine learning models, and what techniques have you used to optimize model performance?\",",
+            "\"Can you describe your experience with model evaluation metrics, and how you have used them to assess the performance of your models in previous projects?\"",
+            "],",
+            "\"behavioral_questions\": [",
+            "\"Can you tell me about a time when you had to communicate complex technical concepts to a non-technical audience, and how you approached the situation?\",",
+            "\"How do you handle conflicts or disagreements with team members, and can you give an example from your previous experience?\",",
+            "\"Can you describe your experience with agile development methodologies, and how you have incorporated them into your workflow?\"",
+            "],",
+            "\"recruiter_screening_questions\": [",
+            "\"Can you tell me about your experience with Python and FastAPI, and how you have used them in your previous projects?\",",
+            "\"How do you"
+          ]
+        }
+      },
+      "schema_valid": false,
+      "schema_repaired": true,
+      "schema_errors": [
+        "missing_required_field:technical_questions",
+        "missing_required_field:project_deep_dive_questions",
+        "missing_required_field:system_design_questions",
+        "missing_required_field:ml_fundamentals_questions",
+        "missing_required_field:behavioral_questions",
+        "missing_required_field:recruiter_screening_questions"
+      ],
+      "schema_warnings": [
+        "json_parse_failed:JSONDecodeError",
+        "literal_eval_failed:SyntaxError",
+        "fallback_line_extraction_used"
+      ],
+      "schema_repair_actions": [
+        "insert_missing_field:technical_questions",
+        "coerce_list:technical_questions",
+        "insert_missing_field:project_deep_dive_questions",
+        "coerce_list:project_deep_dive_questions",
+        "insert_missing_field:system_design_questions",
+        "coerce_list:system_design_questions",
+        "insert_missing_field:ml_fundamentals_questions",
+        "coerce_list:ml_fundamentals_questions",
+        "insert_missing_field:behavioral_questions",
+        "coerce_list:behavioral_questions",
+        "insert_missing_field:recruiter_screening_questions",
+        "coerce_list:recruiter_screening_questions"
+      ],
+      "status": "ok",
+      "error": null
+    },
+    {
+      "agent_name": "RecruiterDecisionAgent",
+      "objective": "Produce final recruiter-facing recommendation.",
+      "agent_mode": "conservative",
+      "estimated_total_tokens_for_pacing": 2490,
+      "pacer_sleep_seconds": 6.243,
+      "optimizer_metrics": {
+        "original_tokens": 2400,
+        "optimized_tokens": 1871,
+        "tokens_saved": 529,
+        "reduction_percentage": 22.0417,
+        "estimated_cost_before": 0.0017478,
+        "estimated_cost_after": 0.00143569,
+        "estimated_savings": 0.00031211,
+        "retention_score": 0.9095,
+        "entity_retention": 0.9438,
+        "numeric_retention": 0.8947,
+        "constraint_retention": 0.985,
+        "semantic_similarity": 0.9819,
+        "keyword_coverage": 0.6667,
+        "cost_reduction_score": 0.1786,
+        "optimization_success_score": 0.6172,
+        "risk_label": "HIGH",
+        "status": "accepted",
+        "reason": null
+      },
+      "groq_usage": {
+        "queue_time": 0.161464827,
+        "prompt_tokens": 2166,
+        "prompt_time": 0.128828221,
+        "completion_tokens": 217,
+        "completion_time": 0.470758994,
+        "total_tokens": 2383,
+        "total_time": 0.599587215
+      },
+      "estimated_prompt_tokens_sent": 1950,
+      "actual_prompt_tokens": 2166,
+      "actual_completion_tokens": 217,
+      "actual_total_tokens": 2383,
+      "prompt_token_estimation_error_pct": 11.0769,
+      "actual_cost_usd": 0.00144937,
+      "reconciled_savings_usd": 0.00034668,
+      "response_preview": "{\n  \"shortlist_decision\": \"SHORTLIST\",\n  \"hireability_label\": \"HIGHLY_HIREABLE\",\n  \"risks\": [\n    \"Limited experience in cost monitoring and production safety\",\n    \"May require additional training in RAG design and LLM evaluation\"\n  ],\n  \"reasons\": [\n    \"Strong Python and backend API development experience\",\n    \"Experience with RAG, vector databases, embeddings, and LLM integration\",\n    \"Good understanding of AI/ML and LLM application development\"\n  ],\n  \"interview_focus_areas\": [\n    \"RAG design\",\n    \"LLM evaluation\",\n    \"prompt optimization\",\n    \"vector search\",\n    \"deployment\",\n    \"cost monitoring\",\n    \"production safety\"\n  ],\n  \"next_step\": \"SCHEDULE_TECHNICAL_INTERVIEW\",\n  \"fit_score\": 85,\n  \"missing_evidence\": [\n    \"Direct experience with cost monitoring and production safety\",\n    \"Evidence of implementing RAG pipeline using Milvus and SentenceTransformers\"\n  ]\n}",
+      "normalized_output": {
+        "shortlist_decision": "SHORTLIST",
+        "hireability_label": "HIGHLY_HIREABLE",
+        "risks": [
+          "Limited experience in cost monitoring and production safety",
+          "May require additional training in RAG design and LLM evaluation"
+        ],
+        "reasons": [
+          "Strong Python and backend API development experience",
+          "Experience with RAG, vector databases, embeddings, and LLM integration",
+          "Good understanding of AI/ML and LLM application development"
+        ],
+        "interview_focus_areas": [
+          "RAG design",
+          "LLM evaluation",
+          "prompt optimization",
+          "vector search",
+          "deployment",
+          "cost monitoring",
+          "production safety"
+        ],
+        "next_step": "SCHEDULE_TECHNICAL_INTERVIEW",
+        "fit_score": 85,
+        "missing_evidence": [
+          "Direct experience with cost monitoring and production safety",
+          "Evidence of implementing RAG pipeline using Milvus and SentenceTransformers"
+        ]
+      },
+      "schema_valid": true,
+      "schema_repaired": true,
+      "schema_errors": [],
+      "schema_warnings": [],
+      "schema_repair_actions": [
+        "normalize_enum:hireability_label:Highly Hireable->HIGHLY_HIREABLE",
+        "normalize_enum_fuzzy:next_step:Schedule a technical interview to assess candidate's skills and experience->SCHEDULE_TECHNICAL_INTERVIEW"
+      ],
+      "status": "ok",
+      "error": null
+    }
+  ],
+  "final_answer": "{\n  \"shortlist_decision\": \"SHORTLIST\",\n  \"hireability_label\": \"HIGHLY_HIREABLE\",\n  \"risks\": [\n    \"Limited experience in cost monitoring and production safety\",\n    \"May require additional training in RAG design and LLM evaluation\"\n  ],\n  \"reasons\": [\n    \"Strong Python and backend API development experience\",\n    \"Experience with RAG, vector databases, embeddings, and LLM integration\",\n    \"Good understanding of AI/ML and LLM application development\"\n  ],\n  \"interview_focus_areas\": [\n    \"RAG design\",\n    \"LLM evaluation\",\n    \"prompt optimization\",\n    \"vector search\",\n    \"deployment\",\n    \"cost monitoring\",\n    \"production safety\"\n  ],\n  \"next_step\": \"SCHEDULE_TECHNICAL_INTERVIEW\",\n  \"fit_score\": 85,\n  \"missing_evidence\": [\n    \"Direct experience with cost monitoring and production safety\",\n    \"Evidence of implementing RAG pipeline using Milvus and SentenceTransformers\"\n  ]\n}"
+}

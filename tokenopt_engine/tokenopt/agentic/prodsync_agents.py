@@ -7,6 +7,16 @@ from typing import Dict, List, Optional
 from ..core.optimizer import TokenOptimizer
 from ..core.schemas import TokenOptimizationConfig
 from ..integrations.groq_client import GroqClient
+from ..governance import (
+    build_schema_repair_prompt,
+    contract_is_schema_critical,
+    get_output_contract,
+    normalized_output_text,
+    required_fields_for_contract,
+    schema_instruction_for_contract,
+    validate_and_normalize_agent_output,
+    validate_evidence_consistency,
+)
 from ..tokenization import count_tokens
 from .compact_memory import build_prodsync_compact_memory, memory_stats, route_context_for_agent
 from .rate_limiter import GroqFreeTierPacer
@@ -29,6 +39,20 @@ class AgentCallRecord:
     actual_cost_usd: float
     reconciled_savings_usd: float
     response_preview: str
+    normalized_output: Dict[str, object] = field(default_factory=dict)
+    schema_valid: bool = False
+    schema_repaired: bool = False
+    schema_errors: List[str] = field(default_factory=list)
+    schema_warnings: List[str] = field(default_factory=list)
+    schema_repair_actions: List[str] = field(default_factory=list)
+    schema_quality_score: float = 0.0
+    schema_retry_attempted: bool = False
+    schema_retry_success: bool = False
+    schema_retry_tokens: int = 0
+    schema_retry_cost_usd: float = 0.0
+    evidence_consistent: bool = True
+    evidence_consistency_score: float = 1.0
+    evidence_warnings: List[str] = field(default_factory=list)
     status: str = "ok"
     error: Optional[str] = None
 
@@ -52,6 +76,13 @@ class AgenticRunReport:
     accepted_agents: int
     rolled_back_agents: int
     high_risk_agents: int
+    schema_valid_agents: int
+    schema_repaired_agents: int
+    schema_invalid_agents: int
+    schema_retry_attempts: int
+    schema_retry_successes: int
+    evidence_inconsistent_agents: int
+    average_evidence_consistency_score: float
     total_sleep_seconds: float
     memory_compaction: Dict[str, object]
     calls: List[AgentCallRecord] = field(default_factory=list)
@@ -69,36 +100,48 @@ AGENT_POLICIES = {
         "min_retention": 0.86,
         "max_tokens": 3200,
         "max_completion": 420,
+        "schema_strict": True,
+        "allow_schema_retry": True,
     },
     "JDRequirementAgent": {
         "mode": "balanced",
         "min_retention": 0.86,
         "max_tokens": 3000,
         "max_completion": 380,
+        "schema_strict": True,
+        "allow_schema_retry": True,
     },
     "SemanticFitScoringAgent": {
         "mode": "conservative",
         "min_retention": 0.90,
         "max_tokens": 3000,
         "max_completion": 420,
+        "schema_strict": True,
+        "allow_schema_retry": True,
     },
     "SkillGapReadinessAgent": {
         "mode": "balanced",
         "min_retention": 0.86,
         "max_tokens": 2800,
         "max_completion": 500,
+        "schema_strict": True,
+        "allow_schema_retry": True,
     },
     "InterviewQuestionAgent": {
         "mode": "aggressive",
         "min_retention": 0.82,
         "max_tokens": 2400,
         "max_completion": 520,
+        "schema_strict": True,
+        "allow_schema_retry": True,
     },
     "RecruiterDecisionAgent": {
         "mode": "conservative",
         "min_retention": 0.90,
         "max_tokens": 2800,
         "max_completion": 420,
+        "schema_strict": True,
+        "allow_schema_retry": True,
     },
 }
 
@@ -106,7 +149,17 @@ AGENT_POLICIES = {
 class ProdSyncAgenticGroqTester:
     """ProdSync-style multi-agent test harness for TokenOpt + Groq.
 
-    v1.3 improvements:
+    v1.5 improvements:
+    - Generic schema-aware optimization: strict contracts automatically protect
+      required field instructions and reduce over-aggressive pruning.
+    - Optional schema-repair retry when normalized repair cannot satisfy the contract.
+    - Generic evidence-consistency validation for structured outputs.
+
+    v1.4 improvements:
+    - Agent output governance: schema validation, normalization, repair metadata.
+    - Final recruiter decision is normalized into stable enums/lists/score scale.
+
+    v1.3 improvements preserved:
     - Agent-specific optimization modes and thresholds.
     - Deterministic compact memory routing to avoid repeating full resume/JD.
     - Smarter retention scoring from the framework.
@@ -135,6 +188,7 @@ class ProdSyncAgenticGroqTester:
         self.input_price = input_price_per_million_tokens
         self.output_price = output_price_per_million_tokens
         self.agent_policies = dict(AGENT_POLICIES)
+        self.enable_schema_retry = os.getenv("TOKENOPT_ENABLE_SCHEMA_RETRY", "true").lower() in {"1", "true", "yes", "y"}
 
     def _optimizer_for_agent(self, agent_name: str) -> TokenOptimizer:
         policy = self.agent_policies.get(agent_name, {})
@@ -142,6 +196,10 @@ class ProdSyncAgenticGroqTester:
         min_retention = float(os.getenv(f"TOKENOPT_{agent_name.upper()}_RETENTION", str(policy.get("min_retention", 0.86))))
         max_tokens = int(os.getenv(f"TOKENOPT_{agent_name.upper()}_MAX_INPUT", str(policy.get("max_tokens", 3000))))
         max_completion = int(policy.get("max_completion", self.max_completion_tokens))
+        contract = get_output_contract(agent_name)
+        schema_strict = bool(policy.get("schema_strict", False) or contract_is_schema_critical(contract))
+        critical_terms = required_fields_for_contract(contract)
+        protected = ["REQUIRED_JSON_FIELDS: " + ", ".join(critical_terms)] if schema_strict and critical_terms else []
         return TokenOptimizer(
             TokenOptimizationConfig(
                 mode=mode,
@@ -150,6 +208,9 @@ class ProdSyncAgenticGroqTester:
                 expected_output_tokens=max_completion,
                 input_price_per_million_tokens=self.input_price,
                 output_price_per_million_tokens=self.output_price,
+                schema_strict=schema_strict,
+                protected_texts=protected,
+                schema_critical_terms=critical_terms,
                 debug=True,
             )
         )
@@ -168,19 +229,31 @@ class ProdSyncAgenticGroqTester:
         return round(max(0.0, float(estimated_savings or 0.0) * ratio), 8)
 
     def _system_prompt(self, agent_name: str) -> str:
-        return (
+        contract = get_output_contract(agent_name)
+        schema_instruction = schema_instruction_for_contract(agent_name, contract)
+        base = (
             f"You are {agent_name}, a precise ProdSync AI agent. "
             "Use only the supplied context. Preserve constraints, numbers, skills, dates, named entities, and role requirements. "
-            "Return compact JSON-like structured text. Do not hallucinate. "
-            "If evidence is missing, say missing_evidence instead of inventing."
+            "Return valid JSON only. Do not wrap in markdown. Do not hallucinate. "
+            "If evidence is missing, use missing_evidence as a JSON array instead of inventing. "
+            "Use stable numeric scores from 0 to 100 where scores are requested."
         )
+        return base + "\n\n" + schema_instruction if schema_instruction else base
 
     def _call_agent(self, agent_name: str, objective: str, prompt: str, context: List[str], query: str) -> AgentCallRecord:
         optimizer = self._optimizer_for_agent(agent_name)
         policy = self.agent_policies.get(agent_name, {})
         max_completion = int(policy.get("max_completion", self.max_completion_tokens))
 
-        optimized = optimizer.optimize(prompt=prompt, context=context, query=query)
+        contract = get_output_contract(agent_name)
+        schema_instruction = schema_instruction_for_contract(agent_name, contract)
+        optimized = optimizer.optimize(
+            prompt=prompt,
+            context=context,
+            query=query,
+            protected_texts=["REQUIRED_JSON_FIELDS: " + ", ".join(required_fields_for_contract(contract))] if required_fields_for_contract(contract) else [],
+            schema_critical_terms=required_fields_for_contract(contract),
+        )
         estimated_prompt_sent = count_tokens(optimized.optimized_prompt) + count_tokens(self._system_prompt(agent_name))
         estimated_total = estimated_prompt_sent + max_completion + 120
         pacer_state = self.pacer.wait(estimated_total)
@@ -204,6 +277,38 @@ class ProdSyncAgenticGroqTester:
                 actual_prompt_tokens,
             )
             content = str(response.get("content", ""))
+            governance = validate_and_normalize_agent_output(agent_name, content, contract=contract, strict_non_empty=True)
+
+            retry_attempted = False
+            retry_success = False
+            retry_tokens = 0
+            retry_cost = 0.0
+            if (not governance.schema_valid) and self.enable_schema_retry and bool(policy.get("allow_schema_retry", True)):
+                retry_attempted = True
+                repair_prompt = build_schema_repair_prompt(content, agent_name, contract)
+                retry_estimated = count_tokens(repair_prompt) + count_tokens(self._system_prompt(agent_name)) + 180
+                self.pacer.wait(retry_estimated)
+                repair_response = self.client.chat(
+                    prompt=repair_prompt,
+                    system_prompt=self._system_prompt(agent_name),
+                    temperature=0.0,
+                    max_tokens=max_completion,
+                )
+                repair_usage = repair_response.get("usage", {}) or {}
+                retry_tokens = int(repair_usage.get("total_tokens", 0) or 0)
+                retry_cost = self._actual_cost(
+                    int(repair_usage.get("prompt_tokens", 0) or 0),
+                    int(repair_usage.get("completion_tokens", 0) or 0),
+                )
+                repaired_content = str(repair_response.get("content", ""))
+                retry_governance = validate_and_normalize_agent_output(agent_name, repaired_content, contract=contract, strict_non_empty=True)
+                if retry_governance.schema_valid or retry_governance.schema_quality_score >= governance.schema_quality_score:
+                    retry_success = retry_governance.schema_valid
+                    governance = retry_governance
+                    content = repaired_content
+
+            consistency = validate_evidence_consistency(governance.normalized_output)
+            normalized_text = normalized_output_text(governance)
             return AgentCallRecord(
                 agent_name=agent_name,
                 objective=objective,
@@ -219,7 +324,21 @@ class ProdSyncAgenticGroqTester:
                 prompt_token_estimation_error_pct=estimation_error_pct,
                 actual_cost_usd=actual_cost,
                 reconciled_savings_usd=reconciled_savings,
-                response_preview=content[:1200],
+                response_preview=normalized_text[:1600],
+                normalized_output=governance.normalized_output,
+                schema_valid=governance.schema_valid,
+                schema_repaired=governance.repaired,
+                schema_errors=governance.errors,
+                schema_warnings=governance.warnings,
+                schema_repair_actions=governance.repair_actions,
+                schema_quality_score=governance.schema_quality_score,
+                schema_retry_attempted=retry_attempted,
+                schema_retry_success=retry_success,
+                schema_retry_tokens=retry_tokens,
+                schema_retry_cost_usd=retry_cost,
+                evidence_consistent=consistency.consistent,
+                evidence_consistency_score=consistency.score,
+                evidence_warnings=consistency.warnings,
             )
         except Exception as exc:
             return AgentCallRecord(
@@ -238,13 +357,19 @@ class ProdSyncAgenticGroqTester:
                 actual_cost_usd=0.0,
                 reconciled_savings_usd=0.0,
                 response_preview="",
+                normalized_output={},
+                schema_valid=False,
+                schema_repaired=False,
+                schema_errors=["agent_call_failed"],
+                schema_warnings=[],
+                schema_repair_actions=[],
                 status="error",
                 error=str(exc),
             )
 
     def run(self, candidate_profile: str, job_description: str, evidence_context: List[str]) -> AgenticRunReport:
         started = datetime.now(timezone.utc)
-        run_id = started.strftime("prodsync-agentic-v13-%Y%m%d-%H%M%S")
+        run_id = started.strftime("prodsync-agentic-v15-%Y%m%d-%H%M%S")
 
         memory = build_prodsync_compact_memory(candidate_profile, job_description, evidence_context)
         mem_stats = memory_stats(memory, candidate_profile, job_description, evidence_context)
@@ -285,7 +410,7 @@ class ProdSyncAgenticGroqTester:
             (
                 "RecruiterDecisionAgent",
                 "Produce final recruiter-facing recommendation.",
-                "Produce a recruiter-facing JSON recommendation: shortlist_decision, hireability_label, risks, reasons, interview_focus_areas, next_step, fit_score, and missing_evidence.",
+                "Produce a recruiter-facing JSON recommendation with exact fields: shortlist_decision, hireability_label, risks, reasons, interview_focus_areas, next_step, fit_score, and missing_evidence. Use shortlist_decision as SHORTLIST, HOLD, or REJECT. Use fit_score as 0-100 integer. Use risks and missing_evidence as arrays.",
                 "recruiter recommendation shortlist hireability risks next steps",
             ),
         ]
@@ -313,6 +438,13 @@ class ProdSyncAgenticGroqTester:
         high_risk = sum(1 for c in calls if c.optimizer_metrics.get("risk_label") == "HIGH")
 
         final_answer = calls[-1].response_preview if calls else ""
+        schema_valid_agents = sum(1 for c in calls if c.schema_valid)
+        schema_repaired_agents = sum(1 for c in calls if c.schema_repaired)
+        schema_invalid_agents = sum(1 for c in calls if not c.schema_valid)
+        schema_retry_attempts = sum(1 for c in calls if c.schema_retry_attempted)
+        schema_retry_successes = sum(1 for c in calls if c.schema_retry_success)
+        evidence_inconsistent_agents = sum(1 for c in calls if not c.evidence_consistent)
+        evidence_scores = [float(c.evidence_consistency_score or 0.0) for c in calls]
         return AgenticRunReport(
             run_id=run_id,
             model=self.client.model,
@@ -322,8 +454,8 @@ class ProdSyncAgenticGroqTester:
             total_agents=len(calls),
             total_actual_prompt_tokens=sum(c.actual_prompt_tokens for c in calls),
             total_actual_completion_tokens=sum(c.actual_completion_tokens for c in calls),
-            total_actual_tokens=sum(c.actual_total_tokens for c in calls),
-            total_actual_cost_usd=round(sum(c.actual_cost_usd for c in calls), 8),
+            total_actual_tokens=sum(c.actual_total_tokens + c.schema_retry_tokens for c in calls),
+            total_actual_cost_usd=round(sum(c.actual_cost_usd + c.schema_retry_cost_usd for c in calls), 8),
             total_reconciled_savings_usd=round(sum(c.reconciled_savings_usd for c in calls), 8),
             total_framework_tokens_saved=sum(tokens_saved),
             average_retention_score=round(sum(retentions) / max(1, len(retentions)), 4),
@@ -331,6 +463,13 @@ class ProdSyncAgenticGroqTester:
             accepted_agents=accepted,
             rolled_back_agents=rolled,
             high_risk_agents=high_risk,
+            schema_valid_agents=schema_valid_agents,
+            schema_repaired_agents=schema_repaired_agents,
+            schema_invalid_agents=schema_invalid_agents,
+            schema_retry_attempts=schema_retry_attempts,
+            schema_retry_successes=schema_retry_successes,
+            evidence_inconsistent_agents=evidence_inconsistent_agents,
+            average_evidence_consistency_score=round(sum(evidence_scores) / max(1, len(evidence_scores)), 4),
             total_sleep_seconds=round(self.pacer.total_sleep_seconds, 3),
             memory_compaction=mem_stats,
             calls=calls,
@@ -353,7 +492,8 @@ def save_agentic_report(report: AgenticRunReport, output_dir: str = "reports") -
         "actual_cost_usd", "reconciled_savings_usd", "original_tokens", "optimized_tokens",
         "tokens_saved", "reduction_percentage", "retention_score", "entity_retention",
         "numeric_retention", "constraint_retention", "semantic_similarity", "keyword_coverage",
-        "optimizer_status", "optimizer_reason", "error"
+        "optimizer_status", "optimizer_reason", "schema_valid", "schema_repaired",
+        "schema_errors", "schema_warnings", "schema_repair_actions", "schema_quality_score", "schema_retry_attempted", "schema_retry_success", "schema_retry_tokens", "schema_retry_cost_usd", "evidence_consistent", "evidence_consistency_score", "evidence_warnings", "error"
     ]
     with open(csv_path, "w", encoding="utf-8") as f:
         f.write(",".join(headers) + "\n")
@@ -385,6 +525,19 @@ def save_agentic_report(report: AgenticRunReport, output_dir: str = "reports") -
                 str(m.get("keyword_coverage", "")),
                 str(m.get("status", "")),
                 str(m.get("reason", "") or ""),
+                str(c.schema_valid),
+                str(c.schema_repaired),
+                "|".join(c.schema_errors),
+                "|".join(c.schema_warnings),
+                "|".join(c.schema_repair_actions),
+                str(c.schema_quality_score),
+                str(c.schema_retry_attempted),
+                str(c.schema_retry_success),
+                str(c.schema_retry_tokens),
+                str(c.schema_retry_cost_usd),
+                str(c.evidence_consistent),
+                str(c.evidence_consistency_score),
+                "|".join(c.evidence_warnings),
                 str(c.error or "").replace(",", ";"),
             ]
             f.write(",".join(v.replace("\n", " ").replace("\r", " ") for v in row) + "\n")

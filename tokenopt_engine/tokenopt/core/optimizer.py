@@ -18,11 +18,29 @@ def _join_prompt(prompt: str, selected_chunks: Sequence[str]) -> str:
     return (prompt or "").strip()
 
 
+def _protected_block(protected_texts: Sequence[str]) -> str:
+    texts = [t.strip() for t in (protected_texts or []) if t and t.strip()]
+    if not texts:
+        return ""
+    return "\n\n[SCHEMA_CRITICAL_PROTECTED_INSTRUCTIONS]\n" + "\n\n".join(texts)
+
+
+def _append_protected(prompt: str, protected_texts: Sequence[str]) -> str:
+    block = _protected_block(protected_texts)
+    if not block:
+        return prompt or ""
+    if block.strip() in (prompt or ""):
+        return prompt or ""
+    return (prompt or "").rstrip() + block
+
+
 class TokenOptimizer:
     """Reusable token optimization middleware for LLM calls.
 
-    It performs safe normalization, duplicate pruning, relevance filtering,
-    token-budget chunk selection, retention scoring, cost scoring, and rollback.
+    v1.5 adds schema-aware optimization without making the optimizer depend on
+    any specific use case. Callers can pass protected schema-contract text or
+    schema-critical terms. The optimizer then treats those instructions as
+    non-negotiable and includes them in the original and optimized prompts.
     """
 
     def __init__(self, config: Optional[TokenOptimizationConfig] = None, **kwargs):
@@ -41,22 +59,44 @@ class TokenOptimizer:
         context: Optional[Union[str, List[str]]] = None,
         query: Optional[str] = None,
         max_input_tokens: Optional[int] = None,
+        protected_texts: Optional[List[str]] = None,
+        schema_critical_terms: Optional[List[str]] = None,
     ) -> OptimizationResult:
         cfg = self.config
         max_tokens = max_input_tokens or cfg.max_input_tokens
-        debug: Dict[str, object] = {"mode": cfg.mode, "max_input_tokens": max_tokens}
+        runtime_protected = []
+        for _txt in list(cfg.protected_texts or []) + list(protected_texts or []):
+            if _txt and _txt.strip() and _txt.strip() not in runtime_protected:
+                runtime_protected.append(_txt.strip())
+        runtime_terms = []
+        for _term in list(cfg.schema_critical_terms or []) + list(schema_critical_terms or []):
+            if _term and str(_term).strip() and str(_term).strip() not in runtime_terms:
+                runtime_terms.append(str(_term).strip())
+        debug: Dict[str, object] = {
+            "mode": cfg.mode,
+            "max_input_tokens": max_tokens,
+            "schema_strict": cfg.schema_strict,
+            "protected_text_count": len(runtime_protected),
+            "schema_critical_terms": runtime_terms,
+        }
 
         if isinstance(context, str):
             chunks = [context]
         else:
             chunks = context or []
 
-        original_full_prompt = _join_prompt(prompt, chunks)
+        # Protected schema/instruction text is included in the original prompt so
+        # retention scoring measures whether optimization preserved it.
+        prompt_with_protection = _append_protected(prompt or "", runtime_protected)
+        original_full_prompt = _join_prompt(prompt_with_protection, chunks)
         original_tokens = count_tokens(original_full_prompt)
 
-        working_prompt = prompt or ""
+        working_prompt = prompt_with_protection
         if cfg.enable_safe_normalization:
             working_prompt, norm_info = safe_normalize(working_prompt)
+            # Re-append protected block after normalization in case any formatter
+            # compressed whitespace or removed a line that was schema critical.
+            working_prompt = _append_protected(working_prompt, runtime_protected)
             debug["safe_normalization"] = norm_info
 
         if cfg.enable_sentence_deduplication:
@@ -64,6 +104,7 @@ class TokenOptimizer:
                 working_prompt,
                 threshold=cfg.duplicate_similarity_threshold or 0.90,
             )
+            working_prompt = _append_protected(working_prompt, runtime_protected)
             debug["prompt_sentence_deduplication"] = dedup_info
 
         selected_chunk_texts: List[str] = []
@@ -104,38 +145,40 @@ class TokenOptimizer:
 
         optimized_candidate = _join_prompt(working_prompt, selected_chunk_texts)
 
-        # If no chunks and prompt is still above budget, safely trim by sentences from the end.
-        # Retention validator + rollback protects correctness.
+        # If prompt is still above budget, trim non-protected sentences only.
         if count_tokens(optimized_candidate) > max_tokens:
             from ..tokenization import split_sentences
-            sentences = split_sentences(working_prompt)
+            protected_block = _protected_block(runtime_protected)
+            prompt_without_block = working_prompt.replace(protected_block, "") if protected_block else working_prompt
+            sentences = split_sentences(prompt_without_block)
             kept = []
             for s in sentences:
-                candidate = _join_prompt("\n".join(kept + [s]), selected_chunk_texts)
+                candidate_prompt = _append_protected("\n".join(kept + [s]), runtime_protected)
+                candidate = _join_prompt(candidate_prompt, selected_chunk_texts)
                 if count_tokens(candidate) <= max_tokens:
                     kept.append(s)
                 else:
                     removed_chunk_texts.append(s)
-            optimized_candidate = _join_prompt("\n".join(kept), selected_chunk_texts)
+            working_prompt = _append_protected("\n".join(kept), runtime_protected)
+            optimized_candidate = _join_prompt(working_prompt, selected_chunk_texts)
             debug["sentence_budget_trim"] = {"kept_sentences": len(kept), "original_sentences": len(sentences)}
 
-        # Retention rescue: if optimization removed too much, add removed chunks back
-        # while budget allows. This is the guardrail that prevents silent information loss.
         retention = self.validator.score(original_full_prompt, optimized_candidate)
         if chunks and retention["retention_score"] < (cfg.min_retention_score or 0.90):
-            # Unique rescue pool avoids adding duplicate chunks just to satisfy brittle coverage.
             rescue_pool = []
             seen_rescue = set(selected_chunk_texts)
             for x in removed_chunk_texts:
                 if x and x not in seen_rescue:
                     rescue_pool.append(x)
                     seen_rescue.add(x)
-            # Prefer chunks with constraints/numbers/entities and higher query similarity.
             from ..extractors import extract_constraints, extract_numbers, extract_entities, extract_codes
             from ..math_utils import cosine_text
             def rescue_score(t: str) -> float:
+                low = t.lower()
+                schema_bonus = sum(2.0 for term in runtime_terms if term and term.lower() in low)
                 return (
-                    3.0 * len(extract_numbers(t))
+                    schema_bonus
+                    + 3.0 * len(extract_numbers(t))
                     + 2.0 * len(extract_codes(t))
                     + 1.5 * len(extract_constraints(t))
                     + 0.5 * len(extract_entities(t))
@@ -158,7 +201,6 @@ class TokenOptimizer:
             debug["retention_rescue"] = {"added_chunks": len(rescue_added), "retention_after_rescue": retention["retention_score"]}
 
         optimized_tokens_candidate = count_tokens(optimized_candidate)
-
         costs = cost_metrics(
             original_tokens=original_tokens,
             optimized_tokens=optimized_tokens_candidate,
@@ -166,7 +208,6 @@ class TokenOptimizer:
             input_price_per_million=cfg.input_price_per_million_tokens,
             output_price_per_million=cfg.output_price_per_million_tokens,
         )
-
         success_score = optimization_success_score(
             retention_score=retention["retention_score"],
             cost_reduction_score=costs["cost_reduction_score"],
@@ -192,7 +233,6 @@ class TokenOptimizer:
             )
             success_score = optimization_success_score(retention["retention_score"], costs["cost_reduction_score"], 0.0)
 
-
         def _risk_label(ret: Dict[str, object], reduction_pct: float, stat: str) -> str:
             if stat == "rolled_back":
                 return "ROLLED_BACK"
@@ -200,6 +240,8 @@ class TokenOptimizer:
             nr = float(ret.get("numeric_retention", 0.0) or 0.0)
             er = float(ret.get("entity_retention", 0.0) or 0.0)
             rs = float(ret.get("retention_score", 0.0) or 0.0)
+            if cfg.schema_strict and (rs < 0.90 or reduction_pct > 28):
+                return "HIGH"
             if rs >= 0.94 and cr >= 0.88 and nr >= 0.98 and er >= 0.90 and reduction_pct <= 30:
                 return "LOW"
             if rs >= 0.88 and cr >= 0.72 and nr >= 0.92 and er >= 0.80:

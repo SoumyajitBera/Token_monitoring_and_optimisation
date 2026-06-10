@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tokenopt-engine"
-version = "1.3.0"
-description = "Dependency-light safe token optimization framework for LLM calls"
+version = "1.5.0"
+description = "Dependency-light schema-aware token optimization and governance framework for LLM calls"
 requires-python = ">=3.9"
 authors = [{name="TokenOpt Engine"}]
 dependencies = []

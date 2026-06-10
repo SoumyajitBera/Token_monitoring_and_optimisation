@@ -24,6 +24,12 @@ class TokenOptimizationConfig:
     debug: bool = False
     risk_labeling_enabled: bool = True
 
+    # v1.5 schema-aware optimization controls. These are generic: any
+    # application can pass protected contract text / required field names.
+    schema_strict: bool = False
+    protected_texts: List[str] = field(default_factory=list)
+    schema_critical_terms: List[str] = field(default_factory=list)
+
     filler_threshold: float = 0.015
     duplicate_similarity_threshold: Optional[float] = None
     relevance_similarity_threshold: Optional[float] = None
@@ -48,6 +54,13 @@ class TokenOptimizationConfig:
             cfg.min_retention_score = cfg.min_retention_score if cfg.min_retention_score is not None else 0.88
             cfg.duplicate_similarity_threshold = cfg.duplicate_similarity_threshold if cfg.duplicate_similarity_threshold is not None else 0.90
             cfg.relevance_similarity_threshold = cfg.relevance_similarity_threshold if cfg.relevance_similarity_threshold is not None else 0.15
+        if cfg.schema_strict:
+            # Schema-critical workflows should not use ultra-aggressive pruning.
+            if cfg.mode == "aggressive":
+                cfg.mode = "balanced"
+                cfg.duplicate_similarity_threshold = max(cfg.duplicate_similarity_threshold or 0.90, 0.90)
+                cfg.relevance_similarity_threshold = min(cfg.relevance_similarity_threshold or 0.15, 0.15)
+            cfg.min_retention_score = max(float(cfg.min_retention_score or 0.0), 0.88)
         return cfg
 
 

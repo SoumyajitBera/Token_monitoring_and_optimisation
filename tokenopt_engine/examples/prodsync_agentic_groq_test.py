@@ -85,7 +85,7 @@ def main() -> None:
     )
     paths = save_agentic_report(report)
 
-    print("\n=== PRODSYNC AGENTIC GROQ TEST SUMMARY V1.3 ===")
+    print("\n=== PRODSYNC AGENTIC GROQ TEST SUMMARY V1.5 ===")
     print(json.dumps({
         "run_id": report.run_id,
         "model": report.model,
@@ -94,6 +94,13 @@ def main() -> None:
         "accepted_agents": report.accepted_agents,
         "rolled_back_agents": report.rolled_back_agents,
         "high_risk_agents": report.high_risk_agents,
+        "schema_valid_agents": report.schema_valid_agents,
+        "schema_repaired_agents": report.schema_repaired_agents,
+        "schema_invalid_agents": report.schema_invalid_agents,
+        "schema_retry_attempts": report.schema_retry_attempts,
+        "schema_retry_successes": report.schema_retry_successes,
+        "evidence_inconsistent_agents": report.evidence_inconsistent_agents,
+        "average_evidence_consistency_score": report.average_evidence_consistency_score,
         "total_actual_prompt_tokens": report.total_actual_prompt_tokens,
         "total_actual_completion_tokens": report.total_actual_completion_tokens,
         "total_actual_tokens": report.total_actual_tokens,
@@ -126,6 +133,18 @@ def main() -> None:
             "reduction_percentage": m.get("reduction_percentage"),
             "retention_score": m.get("retention_score"),
             "constraint_retention": m.get("constraint_retention"),
+            "schema_valid": c.schema_valid,
+            "schema_repaired": c.schema_repaired,
+            "schema_errors": c.schema_errors,
+            "schema_repair_actions": c.schema_repair_actions[:6],
+            "schema_quality_score": c.schema_quality_score,
+            "schema_retry_attempted": c.schema_retry_attempted,
+            "schema_retry_success": c.schema_retry_success,
+            "schema_retry_tokens": c.schema_retry_tokens,
+            "schema_retry_cost_usd": c.schema_retry_cost_usd,
+            "evidence_consistent": c.evidence_consistent,
+            "evidence_consistency_score": c.evidence_consistency_score,
+            "evidence_warnings": c.evidence_warnings,
             "error": c.error,
         }, indent=2))
 
