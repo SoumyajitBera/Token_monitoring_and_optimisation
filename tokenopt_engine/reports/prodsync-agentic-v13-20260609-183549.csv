@@ -1,0 +1,7 @@
+agent_name,status,agent_mode,risk_label,pacer_sleep_seconds,estimated_total_tokens_for_pacing,estimated_prompt_tokens_sent,actual_prompt_tokens,actual_completion_tokens,actual_total_tokens,prompt_token_estimation_error_pct,actual_cost_usd,reconciled_savings_usd,original_tokens,optimized_tokens,tokens_saved,reduction_percentage,retention_score,entity_retention,numeric_retention,constraint_retention,semantic_similarity,keyword_coverage,optimizer_status,optimizer_reason,error
+ResumeIntelligenceAgent,ok,balanced,MEDIUM,0.0,1987,1447,1584,223,1807,9.4679,0.00111073,0.0002267,1739,1388,351,20.184,0.9379,0.8267,1.0,0.9756,0.9831,0.9,accepted,,
+JDRequirementAgent,ok,balanced,LOW,7.156,1906,1406,1538,300,1838,9.3883,0.00114442,0.00010262,1506,1347,159,10.5578,0.9773,0.9538,1.0,0.985,0.9794,0.9667,accepted,,
+SemanticFitScoringAgent,ok,conservative,MEDIUM,7.032,2223,1683,1852,296,2148,10.0416,0.00132652,0.00014868,1853,1624,229,12.3583,0.9647,0.9836,0.9444,0.9807,0.9941,0.9,accepted,,
+SkillGapReadinessAgent,ok,balanced,MEDIUM,6.974,2295,1675,1847,414,2261,10.2687,0.00141679,0.00017241,1881,1616,265,14.0883,0.9356,0.9677,0.9412,0.9618,0.9911,0.7667,accepted,,
+InterviewQuestionAgent,ok,aggressive,MEDIUM,34.573,2048,1408,1539,520,2059,9.304,0.00131881,0.00031922,1844,1349,495,26.8438,0.8948,0.913,0.9231,0.9583,0.9695,0.6333,accepted,,
+RecruiterDecisionAgent,ok,conservative,MEDIUM,13.864,2456,1916,2084,141,2225,8.7683,0.00134095,0.00031766,2352,1857,495,21.0459,0.9239,0.9231,0.9412,0.9654,0.9778,0.7667,accepted,,

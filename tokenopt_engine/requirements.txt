@@ -1,0 +1,2 @@
+# No required third-party dependencies.
+# The framework uses Python standard library only.
